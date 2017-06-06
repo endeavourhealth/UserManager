@@ -1,0 +1,7 @@
+.idea
+target
+*.iml
+node
+node_modules
+**/typings
+!**/typings/local
