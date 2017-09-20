@@ -5,6 +5,7 @@ import {Component} from "@angular/core";
 import {UserService} from "./user.service";
 import {UserRole} from "./models/UserRole";
 import {LoggerService, SecurityService, MessageBoxDialog} from "eds-common-js";
+import {OrgRole} from "eds-common-js/dist/layout/models/OrgRole";
 
 @Component({
 	template : require('./userManagerUserView.html')
@@ -22,6 +23,7 @@ export class UserManagerUserViewComponent {
 
 			this.loggedOnUserUuid = this.securityService.getCurrentUser().uuid;
 
+			this.getLoggedOnUsersOrganisations();
 			this.loadUser();
 	}
 
@@ -40,7 +42,7 @@ export class UserManagerUserViewComponent {
 
 	editUser(user:User) {
 		var vm = this;
-		UserEditorDialog.open(vm.$modal, user, true)
+		UserEditorDialog.open(vm.$modal, user, true, this.getLoggedOnUsersOrganisations())
 			.result.then(
 			(editedUser) => vm.saveUser(user, editedUser),
 			() => vm.log.info('User edit cancelled')
@@ -70,6 +72,21 @@ export class UserManagerUserViewComponent {
 			);
 	}
 
+	getLoggedOnUsersOrganisations():OrgRole[]{
+		let vm = this;
+		let userOrganisations:OrgRole[] = [];
 
+		//super users get full access to all group hierarchy
+		if (vm.securityService.getCurrentUser().isSuperUser == true)
+		{
+			userOrganisations.push(new OrgRole('-1', '/*.*'));
+		}
+
+		for(let orgGroup of vm.securityService.getCurrentUser().organisationGroups) {
+			userOrganisations.push(orgGroup);
+		}
+
+		return userOrganisations;
+	}
 }
 

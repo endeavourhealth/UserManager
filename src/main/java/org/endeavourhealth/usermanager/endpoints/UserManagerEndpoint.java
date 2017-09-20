@@ -16,9 +16,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.*;
-import javax.ws.rs.core.*;
-import java.net.URI;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.SecurityContext;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
@@ -57,7 +60,7 @@ public final class UserManagerEndpoint extends AbstractEndpoint {
 		List<RoleRepresentation> rolesOut = new ArrayList<>();
 
 		for (RoleRepresentation roleRep : rolesIn) {
-			if (roleRep.getDescription().startsWith("$") || roleRep.getName().equalsIgnoreCase("eds_user")) {
+			if (roleRep.getDescription() != null && roleRep.getDescription().startsWith("$") || roleRep.getName().equalsIgnoreCase("eds_user")) {
 				continue;
 			}
 			rolesOut.add(roleRep);
@@ -184,6 +187,37 @@ public final class UserManagerEndpoint extends AbstractEndpoint {
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
 	@Consumes(MediaType.APPLICATION_JSON)
+	@Path("/group/users")
+	public Response getGroupUsers(@Context SecurityContext sc, @QueryParam("groupId") String groupId) throws Exception {
+		super.setLogbackMarkers(sc);
+
+		userAuditRepository.save(getCurrentUserId(sc), getOrganisationUuidFromToken(sc), AuditAction.Load,
+				"Users", "groupId", groupId);
+
+		LOG.trace("getGroupUsers");
+
+		List<JsonEndUser> userList = new ArrayList<>();
+		List<UserRepresentation> users;
+
+		KeycloakAdminClient keycloakClient = new KeycloakAdminClient();
+
+		users = keycloakClient.realms().groups().getGroupMembers(groupId, 0, 100);
+
+		//Add as Json
+		for (UserRepresentation user : users) {
+			userList.add(new JsonEndUser(user));
+		}
+
+		AbstractEndpoint.clearLogbackMarkers();
+		return Response
+				.ok()
+				.entity(userList)
+				.build();
+	}
+
+	@GET
+	@Produces(MediaType.APPLICATION_JSON)
+	@Consumes(MediaType.APPLICATION_JSON)
 	@Path("/roles/realm")
 	public Response getRealmRoles(@Context SecurityContext sc) throws Exception {
 		super.setLogbackMarkers(sc);
@@ -210,8 +244,34 @@ public final class UserManagerEndpoint extends AbstractEndpoint {
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
 	@Consumes(MediaType.APPLICATION_JSON)
+	@Path("/group/roles")
+	public Response getRealmRolesByOrg(@Context SecurityContext sc, @QueryParam("groupId") String groupId) throws Exception {
+		super.setLogbackMarkers(sc);
+
+		userAuditRepository.save(getCurrentUserId(sc), getOrganisationUuidFromToken(sc), AuditAction.Load,
+				"Realm roles", "groupId", groupId);
+
+		LOG.trace("getRealmRolesByOrg");
+
+		//Create the keycloak admin client
+		KeycloakAdminClient keycloakClient = new KeycloakAdminClient();
+
+		//Get all realm roles for the Group/Org, removing the system roles
+		List<RoleRepresentation> realmRoles = removeSystemRoles(keycloakClient.realms().groups().getRealmRoleMappingIds(groupId));
+		List<JsonEndUserRole> roleList = JsonGetUserRoles(realmRoles);
+
+		AbstractEndpoint.clearLogbackMarkers();
+		return Response
+				.ok()
+				.entity(roleList)
+				.build();
+	}
+
+	@GET
+	@Produces(MediaType.APPLICATION_JSON)
+	@Consumes(MediaType.APPLICATION_JSON)
 	@Path("/users/roles/realm/available")
-	public Response getAvailableRealmRoles(@Context SecurityContext sc, @QueryParam("userId") String userId) throws Exception {
+	public Response getAvailableRealmRoles(@Context SecurityContext sc, @QueryParam("userId") String userId, @QueryParam("groupId") String groupId) throws Exception {
 		super.setLogbackMarkers(sc);
 
 		userAuditRepository.save(getCurrentUserId(sc), getOrganisationUuidFromToken(sc), AuditAction.Load,
@@ -226,12 +286,35 @@ public final class UserManagerEndpoint extends AbstractEndpoint {
 		List<RoleRepresentation> availableRealmRoles;
 		List<JsonEndUserRole> roleList;
 		if (userId == null){
-			availableRealmRoles = removeSystemRoles(keycloakClient.realms().roles().getRealmRoles());
+			if (!groupId.equalsIgnoreCase("-1")) {
+				availableRealmRoles = removeSystemRoles(keycloakClient.realms().groups().getRealmRoleMappingIds(groupId));
+			}
+			else
+			{
+				availableRealmRoles = removeSystemRoles(keycloakClient.realms().roles().getRealmRoles());
+			}
 			roleList = JsonGetUserRoles(availableRealmRoles);
 		}
 		else {
-			availableRealmRoles = removeSystemRoles(keycloakClient.realms().users().getUserRealmRolesAvailable(userId));
-			roleList = JsonGetUserRoles(availableRealmRoles);
+			//First get available roles for the org/group
+			if (!groupId.equalsIgnoreCase("-1")) {
+				availableRealmRoles = removeSystemRoles(keycloakClient.realms().groups().getRealmRoleMappingIds(groupId));
+			}
+			else
+			{
+				availableRealmRoles = removeSystemRoles(keycloakClient.realms().roles().getRealmRoles());
+			}
+			//Then get the roles currently assigned to the user
+			List<RoleRepresentation> currentUserRoles = removeSystemRoles (keycloakClient.realms().users().getUserRealmRoles(userId));
+			//Finally, check if user already has an org role assigned otherwise make available
+			List<RoleRepresentation> availableRealmRolesInclude = new ArrayList<RoleRepresentation>();
+			for (RoleRepresentation role : availableRealmRoles) {
+				if (!containsRole(currentUserRoles, role)) {
+					availableRealmRolesInclude.add(role);
+				}
+			}
+			//availableRealmRoles = removeSystemRoles(keycloakClient.realms().users().getUserRealmRolesAvailable(userId));
+			roleList = JsonGetUserRoles(availableRealmRolesInclude);
 		}
 
 		AbstractEndpoint.clearLogbackMarkers();
@@ -239,6 +322,16 @@ public final class UserManagerEndpoint extends AbstractEndpoint {
 				.ok()
 				.entity(roleList)
 				.build();
+	}
+
+	private boolean containsRole (List<RoleRepresentation> roles, RoleRepresentation role)
+	{
+		for (RoleRepresentation roleRep: roles)
+		{
+			if (roleRep.getId().equalsIgnoreCase(role.getId()))
+				return true;
+		}
+		return false;
 	}
 
 	@POST
@@ -338,6 +431,11 @@ public final class UserManagerEndpoint extends AbstractEndpoint {
 
 				//Add sub groups to each parent inc all info
 				List<GroupRepresentation> subGroups = groupRepTop.getSubGroups();
+
+				if (subGroups.size()>0){
+					//TODO: recurse function to ensure more than just 2 sub-groups are added?
+				}
+
 				for (GroupRepresentation subGroupRep : subGroups) {
 					GroupRepresentation subGroupRepTop = keycloakClient.realms().groups().getGroup(subGroupRep.getId());
 					JsonGroup subGroup = new JsonGroup(subGroupRepTop);
@@ -466,7 +564,7 @@ public final class UserManagerEndpoint extends AbstractEndpoint {
 
 			//Get Realm role composites, i.e. client roles - check is composite first
 			if (roleRep.isComposite()) {
-				List<RoleRepresentation> roleComposites = keycloakClient.realms().roles().composites().getComposites(roleRep.getName());
+				List<RoleRepresentation> roleComposites = keycloakClient.realms().roles().composites().getCompositesByRoleId(roleRep.getId());
 
 				for (RoleRepresentation userClientRole : roleComposites) {
 					JsonEndUserRole endUserClientRole = new JsonEndUserRole(userClientRole);
@@ -533,7 +631,7 @@ public final class UserManagerEndpoint extends AbstractEndpoint {
 		//Set the basic user profile info
 		UserRepresentation userRep = new UserRepresentation();
 		userRep.setEnabled(true);
-		userRep.setUsername(user.getUsername());
+		if (!editModeb) {userRep.setUsername(user.getUsername());}  //cannot edit username, only add
 		userRep.setLastName(user.getSurname());
 		userRep.setFirstName(user.getForename());
 		userRep.setEmail(user.getEmail());
@@ -648,30 +746,22 @@ public final class UserManagerEndpoint extends AbstractEndpoint {
 			roleRep = keycloakClient.realms().roles().putRealmRole(roleRep);
 		}
 
-		//This is the new Id - file against organisation
-		//String roleId = roleRep.getId();
-		//TODO: File RoleId against OrganisationId: userRole.getOrganisation(); ??? SEE BELOW
-
-		//Get the new linked group (org)
+		//Get the new linked group (org/service etc.) to add role to
 		String newGroupId = userRole.getGroup().getUuid().toString();
-
-		// Add role to list for API functions
-		List<RoleRepresentation> groupRoles = new ArrayList<>();
-		groupRoles.add(roleRep);
 
 		//If adding a new role, just add the group
 		if (!editModeb) {
-			keycloakClient.realms().groups().addRealmRoleMapping(newGroupId, groupRoles);
+			keycloakClient.realms().groups().addRealmRoleMapping(newGroupId, Arrays.asList(roleRep));
 		}
 		else {
 			//Get existing role group if they exist, and then removed
 			GroupRepresentation oldGroup = getRoleGroupMappingDirectDB (roleRep.getId());
 			if (oldGroup != null) {
 				String oldGroupId = oldGroup.getId();
-				keycloakClient.realms().groups().deleteRealmRoleMapping(oldGroupId, groupRoles);
+				keycloakClient.realms().groups().deleteRealmRoleMapping(oldGroupId, Arrays.asList(roleRep));
 			}
 			// Add in the new linked group (org)
-			keycloakClient.realms().groups().addRealmRoleMapping(newGroupId, groupRoles);
+			keycloakClient.realms().groups().addRealmRoleMapping(newGroupId, Arrays.asList(roleRep));
 		}
 
 		//Get all the linked role composites
@@ -682,19 +772,16 @@ public final class UserManagerEndpoint extends AbstractEndpoint {
 			clientRoles.add(clientRole);
 		}
 
-		//This is the newly created role name, should be same as what was passed in!
-		String roleName = roleRep.getName();
-
 		//If adding a new role, just add the role composites, else, delete existing role composites and then add the new role composites (edit)
 		if(!editModeb){
 			//Save the composite roles to the role (add)
-			keycloakClient.realms().roles().composites().postComposite(roleName, clientRoles);
+			keycloakClient.realms().roles().composites().postCompositeByRoleId(roleId, clientRoles);
 		} else {
 			//Delete the existing roles from the edited user
-			List<RoleRepresentation> existingRoleComposites = keycloakClient.realms().roles().composites().getComposites(roleName);
-			keycloakClient.realms().roles().composites().deleteComposite(roleName, existingRoleComposites);
+			List<RoleRepresentation> existingRoleComposites = keycloakClient.realms().roles().composites().getCompositesByRoleId(roleId);
+			keycloakClient.realms().roles().composites().deleteCompositeByRoleId(roleId, existingRoleComposites);
 			//Save the new role composites to the role
-			keycloakClient.realms().roles().composites().postComposite(roleName, clientRoles);
+			keycloakClient.realms().roles().composites().postCompositeByRoleId(roleId, clientRoles);
 		}
 
 		clearLogbackMarkers();
@@ -731,18 +818,18 @@ public final class UserManagerEndpoint extends AbstractEndpoint {
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Path("/users/role/delete")
 	@RequiresAdmin
-	public Response deleteRealmRole(@Context SecurityContext sc, @QueryParam("roleName") String roleName) throws Exception {
+	public Response deleteRealmRole(@Context SecurityContext sc, @QueryParam("roleId") String roleId) throws Exception {
 		super.setLogbackMarkers(sc);
 
 		userAuditRepository.save(getCurrentUserId(sc), getOrganisationUuidFromToken(sc), AuditAction.Delete,
-				"Role", "Role", roleName);
+				"Role", "Role", roleId);
 
 		//Create the keycloak admin client and delete the role
 		KeycloakAdminClient keycloakClient = new KeycloakAdminClient();
 
-		UriBuilder uriBuilder = UriBuilder.fromPath(roleName);
-		URI uri = uriBuilder.build();
-		keycloakClient.realms().roles().deleteRealmRole(uri.getPath());
+//		UriBuilder uriBuilder = UriBuilder.fromPath(roleName);
+//		URI uri = uriBuilder.build();
+		keycloakClient.realms().roles().deleteRealmRoleById(roleId);
 
 		return Response
 				.ok()

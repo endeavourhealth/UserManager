@@ -72,12 +72,16 @@
 		<!-- USER ROLES -->
 		<!------------------------------------------------------------------------------------------------->
 		<div class="panel panel-default">
-			<div class="panel-heading">Roles</div>
+			<div class="panel-heading">
+				Roles
+			</div>
 			<div class="panel-body">
 				<form UserDetails3="form" class="container-fluid">
 					<div class="row">
 						<div class="col col-md-6">
-							<label class="control-label">Current Roles</label>
+							<div class="col-md-12" style="padding-bottom: 11px;padding-left: 1px">
+								<label class="control-label">Current</label>
+							</div>
 							<div class="scroll-box-150 form-control">
 								<div *ngFor="let role of resultData.userRoles"
 									 class="hover-box show-child-on-hover striped"
@@ -94,7 +98,14 @@
 							</div>
 						</div>
 						<div class="col col-md-6">
-							<label class="control-label">Available Roles</label>
+							<div class="col col-md-2" style="padding: 1px">
+								<label class="control-label">Available</label>
+							</div>
+							<div class="col col-md-10" style="padding: 1px">
+								<select class="form-control" [(ngModel)]="selectedOrganisation" (ngModelChange)="setOrganisation($event)" name="Organisation" #organisation>
+									<option *ngFor="let item of userOrganisations" [ngValue]="item">{{item.name}}</option>
+								</select>
+							</div>
 							<div class="scroll-box-150 form-control">
 								<loadingIndicator [done]="availableRoles">
 									<div *ngFor="let role of availableRoles"

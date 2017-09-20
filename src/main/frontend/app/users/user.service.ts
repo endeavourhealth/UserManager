@@ -17,6 +17,12 @@ export class UserService extends BaseHttp2Service {
 		return this.httpGet('api/usermanager/users');
 	}
 
+	getUsersByOrg(orgId: string): Observable<User[]> {
+		let params = new URLSearchParams();
+		params.set('groupId', orgId);
+		return this.httpGet('api/usermanager/group/users', {search: params});
+	}
+
 	getUsersSearch(searchData: string): Observable<User[]> {
 		let params = new URLSearchParams();
 		params.set('searchData', searchData);
@@ -29,14 +35,21 @@ export class UserService extends BaseHttp2Service {
 		return this.httpGet('api/usermanager/users/user', {search: params});
 	}
 
-	getAvailableRealmRoles(userId: string): Observable<UserRole[]> {
+	getAvailableRealmRoles(userId: string, orgId: string): Observable<UserRole[]> {
 		let params = new URLSearchParams();
 		params.set('userId', userId);
+		params.set('groupId', orgId);
 		return this.httpGet('api/usermanager/users/roles/realm/available', {search: params});
 	}
 
 	getRealmRoles(): Observable<UserRole[]> {
 		return this.httpGet('api/usermanager/roles/realm');
+	}
+
+	getRealmRolesByOrg(orgId: string): Observable<UserRole[]> {
+		let params = new URLSearchParams();
+		params.set('groupId', orgId);
+		return this.httpGet('api/usermanager/group/roles', {search: params});
 	}
 
 	getRealmClients(): Observable<Client[]> {
@@ -67,9 +80,9 @@ export class UserService extends BaseHttp2Service {
 		return this.httpPost('api/usermanager/users/roles/save', editedRole, {search: params});
 	}
 
-	deleteRole(roleName: string) {
+	deleteRole(roleId: string) {
 		let params = new URLSearchParams();
-		params.set('roleName', roleName);
+		params.set('roleId', roleId);
 		return this.httpDelete ('api/usermanager/users/role/delete', {search: params});
 	}
 

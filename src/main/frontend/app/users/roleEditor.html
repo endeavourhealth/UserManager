@@ -8,8 +8,8 @@
 			<div class="form-group col-md-6">
 				<div>
 					<label class="control-label">Role name</label>
-					<input type="text" *ngIf="isEditMode()" disabled class="form-control" placeholder="Rolename" [(ngModel)]="resultData.name" name="rolename" #rolename>
-					<input type="text" *ngIf="!isEditMode()" class="form-control" placeholder="Rolename" [(ngModel)]="resultData.name" (ngModelChange)="updateRoleName($event)" name="rolename" #rolename>
+					<input type="text" *ngIf="isEditMode()" disabled class="form-control" [(ngModel)]="resultData.name" name="rolename" #rolename>
+					<input type="text" *ngIf="!isEditMode()" class="form-control" [(ngModel)]="resultData.name" name="rolename" #rolename>
 				</div>
 				<div>
 					<label for="description">Description</label>

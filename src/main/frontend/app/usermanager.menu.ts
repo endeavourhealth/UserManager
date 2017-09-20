@@ -12,6 +12,10 @@ export class UserManagerMenuService implements  MenuService {
 		return 'Discovery Authentication Service';
 	}
 
+	getClientId(): string {
+		return 'eds-user-manager';
+	}
+
 	constructor(private securityService:SecurityService) {
 		let vm = this;
 		vm.currentUser = vm.securityService.getCurrentUser();

@@ -256,11 +256,4 @@ export class RoleEditorDialog {
 		}
 		return result;
 	}
-
-	// Replace spaces with underscores.  Need to move to role-with-id calls
-	updateRoleName ($event){
-		var roleName = $event;
-		roleName = roleName.replace(' ','_');
-		this.resultData.name = roleName;
-	}
 }

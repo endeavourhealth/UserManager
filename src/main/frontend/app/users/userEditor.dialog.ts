@@ -4,16 +4,18 @@ import {NgbModal, NgbActiveModal} from "@ng-bootstrap/ng-bootstrap";
 import {UserService} from "./user.service";
 import {UserRole} from "./models/UserRole";
 import {LoggerService, MessageBoxDialog} from "eds-common-js";
+import {OrgRole} from "eds-common-js/dist/layout/models/OrgRole";
 
 @Component({
 	selector: 'ngbd-modal-content',
 	template: require('./userEditor.html')
 })
 export class UserEditorDialog {
-	public static open(modalService: NgbModal, user: User, editMode) {
+	public static open(modalService: NgbModal, user: User, editMode, userOrganisations) {
 		const modalRef = modalService.open(UserEditorDialog, {backdrop: "static", size: "lg"});
 		modalRef.componentInstance.resultData = jQuery.extend(true, [], user);
 		modalRef.componentInstance.editMode = editMode;
+		modalRef.componentInstance.userOrganisations = userOrganisations;
 		modalRef.componentInstance.$modal = modalService;
 		return modalRef;
 	}
@@ -21,6 +23,7 @@ export class UserEditorDialog {
 	@Input() resultData: User;
 	@Input() editMode: Boolean;
 	@Input() $modal: NgbModal;
+	@Input() userOrganisations: OrgRole[];
 	dialogTitle: String;
 	availableRoles: UserRole[];
 
@@ -35,6 +38,7 @@ export class UserEditorDialog {
 
 	selectedCurrentRole: UserRole;
 	selectedAvailableRole: UserRole;
+	selectedOrganisation: OrgRole;
 
 	constructor(private log: LoggerService,
 				protected activeModal: NgbActiveModal,
@@ -43,10 +47,11 @@ export class UserEditorDialog {
 	}
 
 	ngOnInit(): void {
-		if (!this.editMode) {
-			this.dialogTitle = "Add user";
+		let vm = this;
+		if (!vm.editMode) {
+			vm.dialogTitle = "Add user";
 
-			this.resultData = {
+			vm.resultData = {
 				uuid: null,
 				forename: '',
 				surname: '',
@@ -60,9 +65,9 @@ export class UserEditorDialog {
 			} as User;
 		}
 		else {
-			this.dialogTitle = "Edit user";
+			vm.dialogTitle = "Edit user";
 
-			this.resultData = {
+			vm.resultData = {
 				uuid: this.resultData.uuid,
 				forename: this.resultData.forename,
 				surname: this.resultData.surname,
@@ -76,7 +81,10 @@ export class UserEditorDialog {
 			} as User;
 		}
 
-		this.getAvailableRealmRoles();
+		if (vm.userOrganisations != null) {
+			vm.selectedOrganisation = vm.userOrganisations[0];
+		}
+		vm.getAvailableRealmRoles();
 	}
 
 	isEditMode(){
@@ -109,12 +117,19 @@ export class UserEditorDialog {
 
 	getAvailableRealmRoles() {
 		var vm = this;
+		vm.availableRoles = null;
 		var userId = vm.resultData.uuid;
-		vm.userService.getAvailableRealmRoles(userId)
+		vm.userService.getAvailableRealmRoles(userId, this.selectedOrganisation.id)
             .subscribe(
 				(result) => vm.availableRoles = result,
 				(error) => vm.log.error('Error loading available realm roles', error, 'Error')
 			);
+	}
+
+	setOrganisation(org: OrgRole){
+		let vm = this;
+		vm.selectedOrganisation = org;
+		vm.getAvailableRealmRoles();
 	}
 
 	//remove role from current into available table, i.e. remove from resultData
