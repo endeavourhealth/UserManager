@@ -1,7 +1,6 @@
 {
-  "name": "enterprise",
+  "name": "usermanager",
   "globalDependencies": {
-    "jquery": "registry:dt/jquery#1.10.0+20160929162922",
-    "keycloak": "file:typings/local/keycloak/keycloak.d.ts"
+    "jquery": "registry:dt/jquery#1.10.0+20160929162922"
   }
 }
