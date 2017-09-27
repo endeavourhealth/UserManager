@@ -697,7 +697,9 @@ public final class UserManagerEndpoint extends AbstractEndpoint {
 
 		//Finally, add the user to each role associated groups (i.e. make them a member by virtue they have a role there)
 		for (JsonEndUserRole jsonEndUserRole : user.getUserRoles()) {
-			keycloakClient.realms().users().joinGroup(userId, jsonEndUserRole.getGroup().getUuid().toString());
+			if (jsonEndUserRole.getGroup() != null) {
+				keycloakClient.realms().users().joinGroup(userId, jsonEndUserRole.getGroup().getUuid().toString());
+			}
 		}
 
 		//Blank out password for audit object
