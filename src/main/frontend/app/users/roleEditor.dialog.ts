@@ -188,12 +188,12 @@ export class RoleEditorDialog {
 				result = false;
 			} else
 			//check user has selected a group/organisation
-			if (this.resultData.group.name.trim() == '') {
-				vm.log.warning('You must select an organisation');
-				vm.groupsearchbox.nativeElement.focus();
-				result = false;
-			}
-			else
+			// if (this.resultData.group.name.trim() == '') {
+			// 	vm.log.warning('You must select an organisation');
+			// 	vm.groupsearchbox.nativeElement.focus();
+			// 	result = false;
+			// }
+			// else
 			//check user has at least one client access role
 			if (this.resultData.clientRoles.length < 1){
 				vm.log.warning('You must select at least one client access profile');

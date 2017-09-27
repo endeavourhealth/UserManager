@@ -7,7 +7,8 @@
 					<div class="panel panel-primary">
 						<div class="panel-heading">
 							Users
-							<label class="btn btn-xs btn-success pull-right" (click)="addUser()">Add new</label>
+							<label *ngIf="!hasPermission('eds-user-manager:user-manager-add')" class="btn btn-xs btn-success pull-right disabled" style="cursor:not-allowed">Add new</label>
+							<label *ngIf="hasPermission('eds-user-manager:user-manager-add')" class="btn btn-xs btn-success pull-right" style="cursor:pointer" (click)="addUser()">Add new</label>
 						</div>
 						<div class="panel-body" style="overflow:hidden;  min-height: 720px;">
 							<div class="table" style="margin-bottom: 15px">
@@ -60,11 +61,7 @@
 											<td>{{user.username}}</td>
 											<td>{{user.surname}}</td>
 											<td>{{user.forename}}</td>
-											<!--<td>
-                                                <span class="child-to-show">
-                                                    <label class="btn btn-success btn-xs" (click)="editUser(user)">Edit</label>
-                                                </span>
-                                            </td> -->
+
 										</tr>
 										</tbody>
 									</table>
@@ -77,8 +74,12 @@
 				<div class="col-md-7">
 					<div class="panel panel-primary">
 						<div class="panel-heading">
-							<label class="btn btn-xs btn-success pull-right" *ngIf="selectedUser" (click)="editUser(selectedUser)">Edit</label>
-							<label class="btn btn-xs btn-success pull-right" *ngIf="selectedUser" (click)="deleteUser(selectedUser)">Delete</label>
+							<label *ngIf="selectedUser && !hasPermission('eds-user-manager:user-manager-edit')" class="btn btn-xs btn-success pull-right disabled" style="cursor:not-allowed">Edit</label>
+							<label *ngIf="selectedUser && hasPermission('eds-user-manager:user-manager-edit')" class="btn btn-xs btn-success pull-right" style="cursor:pointer" (click)="editUser(selectedUser)">Edit</label>
+
+							<label *ngIf="selectedUser && !hasPermission('eds-user-manager:user-manager-delete')" class="btn btn-xs btn-success pull-right disabled" style="cursor:not-allowed">Delete</label>
+							<label *ngIf="selectedUser && hasPermission('eds-user-manager:user-manager-delete')" class="btn btn-xs btn-success pull-right" style="cursor:pointer" (click)="deleteUser(selectedUser)">Delete</label>
+
 							User details
 						</div>
 						<div class="panel-body" style="overflow:hidden; height:100%; min-height: 720px;">

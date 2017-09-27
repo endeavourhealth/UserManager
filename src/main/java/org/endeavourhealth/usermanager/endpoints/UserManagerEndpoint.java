@@ -697,7 +697,7 @@ public final class UserManagerEndpoint extends AbstractEndpoint {
 
 		//Finally, add the user to each role associated groups (i.e. make them a member by virtue they have a role there)
 		for (JsonEndUserRole jsonEndUserRole : user.getUserRoles()) {
-			if (jsonEndUserRole.getGroup() != null) {
+			if (jsonEndUserRole.getGroup().getUuid() != null) {
 				keycloakClient.realms().users().joinGroup(userId, jsonEndUserRole.getGroup().getUuid().toString());
 			}
 		}
@@ -748,22 +748,23 @@ public final class UserManagerEndpoint extends AbstractEndpoint {
 			roleRep = keycloakClient.realms().roles().putRealmRole(roleRep);
 		}
 
-		//Get the new linked group (org/service etc.) to add role to
-		String newGroupId = userRole.getGroup().getUuid().toString();
+		//Get the new linked group (org/service etc.) to add role to, if selected
+		if (userRole.getGroup().getUuid() != null) {
+			String newGroupId = userRole.getGroup().getUuid().toString();
 
-		//If adding a new role, just add the group
-		if (!editModeb) {
-			keycloakClient.realms().groups().addRealmRoleMapping(newGroupId, Arrays.asList(roleRep));
-		}
-		else {
-			//Get existing role group if they exist, and then removed
-			GroupRepresentation oldGroup = getRoleGroupMappingDirectDB (roleRep.getId());
-			if (oldGroup != null) {
-				String oldGroupId = oldGroup.getId();
-				keycloakClient.realms().groups().deleteRealmRoleMapping(oldGroupId, Arrays.asList(roleRep));
+			//If adding a new role, just add the group
+			if (!editModeb) {
+				keycloakClient.realms().groups().addRealmRoleMapping(newGroupId, Arrays.asList(roleRep));
+			} else {
+				//Get existing role group if they exist, and then remove
+				GroupRepresentation oldGroup = getRoleGroupMappingDirectDB(roleRep.getId());
+				if (oldGroup != null) {
+					String oldGroupId = oldGroup.getId();
+					keycloakClient.realms().groups().deleteRealmRoleMapping(oldGroupId, Arrays.asList(roleRep));
+				}
+				// Add in the new linked group (org)
+				keycloakClient.realms().groups().addRealmRoleMapping(newGroupId, Arrays.asList(roleRep));
 			}
-			// Add in the new linked group (org)
-			keycloakClient.realms().groups().addRealmRoleMapping(newGroupId, Arrays.asList(roleRep));
 		}
 
 		//Get all the linked role composites
@@ -828,9 +829,6 @@ public final class UserManagerEndpoint extends AbstractEndpoint {
 
 		//Create the keycloak admin client and delete the role
 		KeycloakAdminClient keycloakClient = new KeycloakAdminClient();
-
-//		UriBuilder uriBuilder = UriBuilder.fromPath(roleName);
-//		URI uri = uriBuilder.build();
 		keycloakClient.realms().roles().deleteRealmRoleById(roleId);
 
 		return Response

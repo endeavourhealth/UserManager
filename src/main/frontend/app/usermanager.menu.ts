@@ -22,20 +22,11 @@ export class UserManagerMenuService implements  MenuService {
 	}
 
 	getMenuOptions():MenuOption[] {
-		switch (this.currentUser.isSuperUser) {
-			case true:
 				return [
-					//options disabled in V1 - enabled for role eds_superuser (only settable via keycloak UI)
-					{caption: 'User Manager', state: 'app.userManager', icon: 'fa fa-users'},
-					{caption: 'Role Manager', state: 'app.roleManager', icon: 'fa fa-tasks'},
-
-					{caption: 'Client Manager', state: 'app.clientManager', icon: 'fa fa-laptop'},
+					{caption: 'User Manager', state: 'app.userManager', icon: 'fa fa-users', role: 'eds-user-manager:user-manager'},
+					{caption: 'Role Manager', state: 'app.roleManager', icon: 'fa fa-tasks', role: 'eds-user-manager:role-manager'},
+					{caption: 'Client Manager', state: 'app.clientManager', icon: 'fa fa-laptop', role: 'eds-user-manager:client-manager'},
 					//{caption: 'Management', state: 'app.managerList', icon: 'fa fa-user'},
 				];
-			case false:
-				return [];
-			default:
-				return [];
 		}
-	}
 }

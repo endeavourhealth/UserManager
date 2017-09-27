@@ -5,7 +5,6 @@ import {Component, ViewChild} from "@angular/core";
 import {UserService} from "./user.service";
 import {UserRole} from "./models/UserRole";
 import {SecurityService, MessageBoxDialog, LoggerService} from "eds-common-js";
-import {Group} from "./models/Group";
 import {OrgRole} from "eds-common-js/dist/layout/models/OrgRole";
 import {User as User2} from "eds-common-js/dist/security/models/User";
 
@@ -296,5 +295,10 @@ export class UserManagerComponent {
 			index1++;
 		}
 	}
+
+    hasPermission(role : string) : boolean {
+        return this.securityService.hasPermission('eds-user-manager', role);
+    }
+
 }
 

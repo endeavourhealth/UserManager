@@ -22,11 +22,9 @@ import {ClientManagerComponent} from "./users/clientManager.component";
 	Application.Define({
 		modules: [
 			DialogsModule,
-
 			UserModule
 		],
 		states: [
-			//For v1, only enable the User View and User Editor components - consider settable for superuser
 			{name: 'app.userManager', url: '/users/userManager', component: UserManagerComponent},
 			{name: 'app.userManagerViewUser', url: '/users/userManagerUserView', component: UserManagerUserViewComponent},
 			{name: 'app.userEditor', url: '/users/userEditor', component: UserEditorDialog},

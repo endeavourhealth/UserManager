@@ -6,7 +6,8 @@
 			<div class="col-md-5">
 				<div class="panel panel-primary">
 					<div class="panel-heading">
-						<label class="btn btn-xs btn-success pull-right" (click)="addRole()">Add new</label>
+						<label *ngIf="!hasPermission('eds-user-manager:role-manager-add')" class="btn btn-xs btn-success pull-right disabled" style="cursor:not-allowed">Add new</label>
+						<label *ngIf="hasPermission('eds-user-manager:role-manager-add')" class="btn btn-xs btn-success pull-right" style="cursor:pointer" (click)="addRole()">Add new</label>
 						Roles
 					</div>
 					<div class="panel-body" style="overflow:hidden; height:100%; min-height: 720px;">
@@ -68,8 +69,12 @@
 			<div class="col-md-7">
 				<div class="panel panel-primary">
 					<div class="panel-heading">
-						<label class="btn btn-xs btn-success pull-right" *ngIf="selectedRole" (click)="editRole(selectedRole)">Edit</label>
-						<label class="btn btn-xs btn-success pull-right" *ngIf="selectedRole" (click)="deleteRole(selectedRole)">Delete</label>
+						<label *ngIf="selectedRole && !hasPermission('eds-user-manager:role-manager-edit')" class="btn btn-xs btn-success pull-right disabled" style="cursor:not-allowed">Edit</label>
+						<label *ngIf="selectedRole && hasPermission('eds-user-manager:role-manager-edit')" class="btn btn-xs btn-success pull-right" style="cursor:pointer" (click)="editRole(selectedRole)">Edit</label>
+
+						<label *ngIf="selectedRole && !hasPermission('eds-user-manager:role-manager-delete')" class="btn btn-xs btn-success pull-right disabled" style="cursor:not-allowed">Delete</label>
+						<label *ngIf="selectedRole && hasPermission('eds-user-manager:role-manager-delete')" class="btn btn-xs btn-success pull-right" style="cursor:pointer" (click)="deleteRole(selectedRole)">Delete</label>
+
 						Role details
 					</div>
 					<div class="panel-body" style="overflow:hidden; height:100%; min-height: 720px;">

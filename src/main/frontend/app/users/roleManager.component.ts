@@ -224,5 +224,9 @@ export class RoleManagerComponent {
 			index1++;
 		}
 	}
+
+    hasPermission(role : string) : boolean {
+        return this.securityService.hasPermission('eds-user-manager', role);
+    }
 }
 
