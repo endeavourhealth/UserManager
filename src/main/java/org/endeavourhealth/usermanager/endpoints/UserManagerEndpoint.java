@@ -2,10 +2,12 @@ package org.endeavourhealth.usermanager.endpoints;
 
 import org.endeavourhealth.common.security.annotations.RequiresAdmin;
 import org.endeavourhealth.common.security.keycloak.client.KeycloakAdminClient;
-import org.endeavourhealth.core.data.audit.UserAuditRepository;
-import org.endeavourhealth.core.data.audit.models.AuditAction;
-import org.endeavourhealth.core.data.audit.models.AuditModule;
-import org.endeavourhealth.core.mySQLDatabase.models.GroupRoleMappingEntity;
+
+import org.endeavourhealth.core.database.dal.DalProvider;
+import org.endeavourhealth.core.database.dal.audit.UserAuditDalI;
+import org.endeavourhealth.core.database.dal.audit.models.AuditAction;
+import org.endeavourhealth.core.database.dal.audit.models.AuditModule;
+import org.endeavourhealth.core.database.rdbms.keycloak.models.GroupRoleMappingEntity;
 import org.endeavourhealth.coreui.endpoints.AbstractEndpoint;
 import org.endeavourhealth.coreui.json.JsonClient;
 import org.endeavourhealth.coreui.json.JsonEndUser;
@@ -31,7 +33,7 @@ import static org.endeavourhealth.common.security.SecurityUtils.hasRole;
 @Path("/usermanager")
 public final class UserManagerEndpoint extends AbstractEndpoint {
 	private static final Logger LOG = LoggerFactory.getLogger(UserManagerEndpoint.class);
-	private static final UserAuditRepository userAuditRepository = new UserAuditRepository(AuditModule.EdsUserManagerModule.UserManager);
+	private static final UserAuditDalI userAuditRepository = DalProvider.factoryUserAuditDal(AuditModule.EdsUserManagerModule.UserManager);
 
 //	private String keycloakRealm;
 //	private String authServerBaseUrl;
