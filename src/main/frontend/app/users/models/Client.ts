@@ -4,8 +4,9 @@ export class Client {
 			constructor() {
 	}
 
-	uuid:string;
-	name:string;
-	description:string;
+	uuid: string;
+	name: string;
+	clientId: string;
+	description: string;
 	clientRoles: UserRole[];
 }
