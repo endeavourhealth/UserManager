@@ -35,27 +35,6 @@ public final class UserManagerEndpoint extends AbstractEndpoint {
 	private static final Logger LOG = LoggerFactory.getLogger(UserManagerEndpoint.class);
 	private static final UserAuditDalI userAuditRepository = DalProvider.factoryUserAuditDal(AuditModule.EdsUserManagerModule.UserManager);
 
-//	private String keycloakRealm;
-//	private String authServerBaseUrl;
-//
-//	private boolean initKeycloakAdmin = false;
-//
-//	private void initKeycloakAdminClient() {
-//
-//		// get the Endeavour realm name
-//		KeycloakDeployment keycloakDeployment = KeycloakConfigUtils.getDeployment();
-//		keycloakRealm = keycloakDeployment.getRealm();
-//		authServerBaseUrl = KeycloakConfigUtils.initialize();
-//
-//		try {
-//			LOG.trace("Keycloak token = '{}'", KeycloakClient.instance().getToken().getToken());
-//		} catch (IOException e) {
-//			LOG.trace("Keycloak token = 'null'", e);
-//		}
-//
-//		initKeycloakAdmin = true;
-//	}
-
 	private List<RoleRepresentation> removeSystemRoles (List<RoleRepresentation> rolesIn) {
 		//Remove $system roles and the eds_user role (default for all users to enable API calls for logged in user)
 
