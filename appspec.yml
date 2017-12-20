@@ -1,8 +1,8 @@
 version: 0.0
 os: linux
 files:
-  - source: /target/eds-user-manager-1.0-SNAPSHOT.war
-    destination: /opt/tomcat/webapps/user-manager.war
+  - source: /target/user-manager.war
+    destination: /opt/tomcat/webapps
 hooks:
   BeforeInstall:
     - location: aws_scripts/cleanup

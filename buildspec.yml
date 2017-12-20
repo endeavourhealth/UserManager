@@ -18,4 +18,4 @@ artifacts:
   files:
     - appspec.yml
     - aws_scripts/**/*
-    - target/eds-user-manager-1.0-SNAPSHOT.war
+    - target/user-manager.war
