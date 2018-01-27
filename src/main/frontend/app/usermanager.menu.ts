@@ -6,7 +6,7 @@ import {MenuOption} from "eds-common-js/dist/layout/models/MenuOption";
 export class UserManagerMenuService implements  MenuService {
 
 	getApplicationTitle(): string {
-		return 'Discovery Authentication Service';
+		return 'User Manager';
 	}
 
 	getClientId(): string {
