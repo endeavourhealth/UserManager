@@ -15,12 +15,11 @@
         <maven-compiler-plugin.version>3.1</maven-compiler-plugin.version>
         <frontend-maven-plugin.version>1.4</frontend-maven-plugin.version>
 
-        <eds-api.version>1.7-SNAPSHOT</eds-api.version>
-        <eds-core.version>1.81-SNAPSHOT</eds-core.version>
-        <eds-config.version>1.15-SNAPSHOT</eds-config.version>
-        <eds-security.version>1.4-SNAPSHOT</eds-security.version>
+        <eds-api.version>1.30-SNAPSHOT</eds-api.version>
+        <eds-core.version>1.339-SNAPSHOT</eds-core.version>
+        <eds-config.version>1.23-SNAPSHOT</eds-config.version>
+        <eds-security.version>1.12-SNAPSHOT</eds-security.version>
 
-        <amqp-client.version>3.6.2</amqp-client.version>
         <cassandra-driver.version>3.1.1</cassandra-driver.version>
         <commons-collections4.version>4.0</commons-collections4.version>
         <commons-lang3.version>3.4</commons-lang3.version>
